@@ -1,4 +1,6 @@
 #include <Windows.h>
+#include <D3d12.h>
+#include <DXGI.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -47,6 +49,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			MB_ICONEXCLAMATION | MB_OK);
 	}
 
+	ID3D12Device* DirectXDevice;
+	IDXGIAdapter1* pAdapter = nullptr;
+	IDXGIFactory1 * pFactory;
+	CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&pFactory));
+	pFactory->EnumAdapters1(1, &pAdapter);
+
+	if (D3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&DirectXDevice)) != S_FALSE)//_uuidof(ID3D12Device), 0) != S_FALSE)
+	{
+		MessageBox(WindowPtr, "Error in creating d3d12device.", 0, 0);
+	}
+
+	
+	DirectXDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&DirectXDevice));// __uuidof(ID3D12Fence), 0);
+
+	UINT mRtvDescriptorSize = DirectXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	UINT mDsvDescriptorSize = DirectXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+	UINT mCbvSrvDescriptorSize = DirectXDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;	msQualityLevels.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+	msQualityLevels.SampleCount = 4;
+	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+	msQualityLevels.NumQualityLevels = 0;
+
+	DirectXDevice->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msQualityLevels,
+		sizeof(msQualityLevels)));
+	m4xMsaaQuality = msQualityLevels.NumQualityLevels;
+	assert(m4xMsaaQuality > 0 && “Unexpected MSAA quality
+		level.”);
+	
 	UpdateWindow(WindowPtr);
 	ShowWindow(WindowPtr, CommandShow);
 
